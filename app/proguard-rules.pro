@@ -1,0 +1,5 @@
+-keep class com.google.mediapipe.** { *; }
+-keep class com.google.mlkit.** { *; }
+-keep class androidx.room.** { *; }
+-keepattributes *Annotation*
+-dontwarn com.google.mediapipe.**

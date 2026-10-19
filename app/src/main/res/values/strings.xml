@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">TradeLens Local</string>
+    <string name="accessibility_service_label">TradeLens Local screen reader</string>
+    <string name="accessibility_service_description">Read visible text from the single trading app package you configure. The service is read-only and never interacts with the trading app.</string>
+    <string name="overlay_notification_title">TradeLens Local is active</string>
+    <string name="overlay_notification_text">On-device analysis overlay is ready.</string>
+</resources>

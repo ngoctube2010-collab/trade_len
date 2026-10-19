@@ -5,6 +5,10 @@ dist
 tmp
 out-tsc
 *.tsbuildinfo
+/.gradle/
+/app/build/
+/local.properties
+/app/src/main/assets/*.bin
 .expo
 .expo-shared
 

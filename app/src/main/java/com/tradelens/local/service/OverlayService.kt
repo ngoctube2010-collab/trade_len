@@ -15,6 +15,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
@@ -159,7 +160,7 @@ class OverlayService : Service() {
 
     private fun showBubble() {
         if (bubbleView != null || !Permissions.canDrawOverlays(this)) return
-        val view = layoutInflater.inflate(R.layout.overlay_bubble, null)
+        val view = LayoutInflater.from(this).inflate(R.layout.overlay_bubble, null)
         val preferences = getSharedPreferences(POSITION_PREFS, MODE_PRIVATE)
         val params = WindowManager.LayoutParams(
             dp(48),
@@ -183,7 +184,7 @@ class OverlayService : Service() {
         var startX = 0
         var startY = 0
         var moved = false
-        view.setOnTouchListener { _, event ->
+        view.setOnTouchListener { _: View, event: MotionEvent ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     downX = event.rawX
@@ -287,7 +288,7 @@ class OverlayService : Service() {
 
     private fun ensureCard(): View {
         cardView?.let { return it }
-        val view = layoutInflater.inflate(R.layout.overlay_card, null)
+        val view = LayoutInflater.from(this).inflate(R.layout.overlay_card, null)
         val params = WindowManager.LayoutParams(
             dp(300),
             WindowManager.LayoutParams.WRAP_CONTENT,

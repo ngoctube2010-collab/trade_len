@@ -1,0 +1,76 @@
+> Configure project :app
+w: file:///home/runner/work/trade_len/trade_len/app/build.gradle.kts:36:5: 'fun BaseAppModuleExtension.kotlinOptions(configure: Action<KotlinJvmOptions>): Unit' is deprecated. The kotlinOptions types are deprecated, please migrate to the compilerOptions types. More details are here: https://kotl.in/u1r8ln.
+
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateDebugBuildConfig
+> Task :app:generateDebugResValues
+> Task :app:checkDebugAarMetadata
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:mergeDebugResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :app:parseDebugLocalResources
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:javaPreCompileDebug
+> Task :app:mergeDebugShaders
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets
+> Task :app:processDebugManifestForPackage
+> Task :app:compressDebugAssets
+> Task :app:desugarDebugFileDependencies
+> Task :app:processDebugResources
+> Task :app:checkDebugDuplicateClasses
+> Task :app:kspDebugKotlin
+> Task :app:mergeExtDexDebug
+> Task :app:mergeDebugJniLibFolders
+> Task :app:mergeLibDexDebug
+> Task :app:mergeDebugNativeLibs
+> Task :app:validateSigningDebug
+> Task :app:writeDebugAppMetadata
+> Task :app:writeDebugSigningConfigVersions
+
+> Task :app:stripDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so, libdatastore_shared_counter.so, libllm_inference_engine_jni.so, libmlkit_google_ocr_pipeline.so.
+e: file:///home/runner/work/trade_len/trade_len/app/src/main/java/com/tradelens/local/service/OverlayService.kt:162:20 Unresolved reference 'layoutInflater'.
+
+e: file:///home/runner/work/trade_len/trade_len/app/src/main/java/com/tradelens/local/service/OverlayService.kt:186:35 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///home/runner/work/trade_len/trade_len/app/src/main/java/com/tradelens/local/service/OverlayService.kt:186:38 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///home/runner/work/trade_len/trade_len/app/src/main/java/com/tradelens/local/service/OverlayService.kt:187:25 Unresolved reference 'action'.
+e: file:///home/runner/work/trade_len/trade_len/app/src/main/java/com/tradelens/local/service/OverlayService.kt:189:35 Unresolved reference 'rawX'.
+e: file:///home/runner/work/trade_len/trade_len/app/src/main/java/com/tradelens/local/service/OverlayService.kt:190:35 Unresolved reference 'rawY'.
+> Task :app:compileDebugKotlin FAILED
+e: file:///home/runner/work/trade_len/trade_len/app/src/main/java/com/tradelens/local/service/OverlayService.kt:198:37 Unresolved reference 'rawX'.
+e: file:///home/runner/work/trade_len/trade_len/app/src/main/java/com/tradelens/local/service/OverlayService.kt:199:37 Unresolved reference 'rawY'.
+e: file:///home/runner/work/trade_len/trade_len/app/src/main/java/com/tradelens/local/service/OverlayService.kt:290:20 Unresolved reference 'layoutInflater'.
+
+
+[Incubating] Problems report is available at: file:///home/runner/work/trade_len/trade_len/build/reports/problems/problems-report.html
+FAILURE: Build failed with an exception.
+
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+* What went wrong:
+
+Execution failed for task ':app:compileDebugKotlin' (registered by plugin 'org.jetbrains.kotlin.android').
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+
+   > Compilation error. See log for more details
+For more on this, please refer to https://docs.gradle.org/9.8.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+30 actionable tasks: 30 executed
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 3m 8s
+Error: Process completed with exit code 1.

@@ -238,6 +238,7 @@ class OverlayService : Service() {
         card.findViewById<ProgressBar>(R.id.overlayProgress).visibility = View.VISIBLE
         card.findViewById<TextView>(R.id.overlayTitle).text = "Analyzing on this device"
         card.findViewById<TextView>(R.id.overlayDetails).text = message
+        card.findViewById<TextView>(R.id.overlayCopy).visibility = View.GONE
         card.visibility = View.VISIBLE
     }
 
@@ -246,6 +247,7 @@ class OverlayService : Service() {
         card.findViewById<ProgressBar>(R.id.overlayProgress).visibility = View.GONE
         card.findViewById<TextView>(R.id.overlayTitle).text = "Analysis unavailable"
         card.findViewById<TextView>(R.id.overlayDetails).text = message
+        card.findViewById<TextView>(R.id.overlayCopy).visibility = View.GONE
         card.visibility = View.VISIBLE
         scheduleDismiss()
     }
@@ -271,6 +273,7 @@ class OverlayService : Service() {
     ) {
         val card = ensureCard()
         card.findViewById<ProgressBar>(R.id.overlayProgress).visibility = View.GONE
+        card.findViewById<TextView>(R.id.overlayCopy).visibility = View.VISIBLE
         val title = listOf(ticker.ifBlank { "Analysis" }, price)
             .filter { it.isNotBlank() }
             .joinToString(" · ")
@@ -300,9 +303,54 @@ class OverlayService : Service() {
             gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
             y = dp(96)
         }
+        view.background = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = dp(14).toFloat()
+            setColor(0xFFF4F7F4.toInt())
+            setStroke(dp(1), 0x331D6F5A.toInt())
+        }
         view.findViewById<TextView>(R.id.overlayClose).setOnClickListener {
             view.visibility = View.GONE
         }
+        val copyButton = view.findViewById<TextView>(R.id.overlayCopy)
+        copyButton.setOnClickListener {
+            val textToCopy = buildString {
+                val title = view.findViewById<TextView>(R.id.overlayTitle).text
+                val details = view.findViewById<TextView>(R.id.overlayDetails).text
+                append(title).append("\n\n").append(details)
+            }
+            val clipboard = getSystemService(CLIPBOARD_SERVICE) as? android.content.ClipboardManager
+            val clip = android.content.ClipData.newPlainText("TradeLens Analysis", textToCopy)
+            clipboard?.setPrimaryClip(clip)
+            copyButton.text = "Copied!"
+            mainHandler.postDelayed({ copyButton.text = "Copy" }, 2000L)
+        }
+
+        var cDownX = 0f
+        var cDownY = 0f
+        var cStartParamsX = 0
+        var cStartParamsY = 0
+        view.findViewById<View>(R.id.overlayTitle).setOnTouchListener { _: View, event: MotionEvent ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    cDownX = event.rawX
+                    cDownY = event.rawY
+                    cStartParamsX = params.x
+                    cStartParamsY = params.y
+                    true
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val dx = (event.rawX - cDownX).toInt()
+                    val dy = (event.rawY - cDownY).toInt()
+                    params.x = cStartParamsX + dx
+                    params.y = (cStartParamsY + dy).coerceAtLeast(dp(20))
+                    runCatching { windowManager.updateViewLayout(view, params) }
+                    true
+                }
+                else -> false
+            }
+        }
+
         windowManager.addView(view, params)
         cardView = view
         cardParams = params

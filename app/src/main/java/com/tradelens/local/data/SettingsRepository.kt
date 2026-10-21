@@ -93,6 +93,8 @@ class SettingsRepository(private val context: Context) {
     companion object {
         const val DEFAULT_MODEL_URL =
             "https://huggingface.co/google/gemma-2b-it-gpu-int4/resolve/main/gemma2-2b-it-gpu-int4.bin"
+        const val CPU_MODEL_URL =
+            "https://huggingface.co/google/gemma-2b-it-cpu-int4/resolve/main/gemma-2b-it-cpu-int4.bin"
         const val MODEL_FILE_NAME = "gemma2-2b-it-gpu-int4.bin"
     }
 }

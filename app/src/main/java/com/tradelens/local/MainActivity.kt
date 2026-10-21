@@ -10,9 +10,12 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import com.tradelens.local.ai.LlmEngine
@@ -37,6 +41,7 @@ import com.tradelens.local.ai.ModelState
 import com.tradelens.local.data.AppSettings
 import com.tradelens.local.data.SettingsRepository
 import com.tradelens.local.service.OverlayService
+import com.tradelens.local.service.ScreenReaderState
 import com.tradelens.local.ui.HistoryScreen
 import com.tradelens.local.ui.OnboardingScreen
 import com.tradelens.local.ui.SettingsScreen
@@ -296,17 +301,30 @@ private fun HomeScreen(
     onEnableAnalysis: () -> Unit,
     onStopAnalysis: () -> Unit
 ) {
+    val context = LocalContext.current
+    val screenSnapshot by ScreenReaderState.snapshot.collectAsState()
+    val firstPackage = remember(settings.targetPackage) {
+        settings.targetPackage.split(',', ';', ' ', '\n').firstOrNull { it.isNotBlank() } ?: ""
+    }
+    val targetLaunchIntent = remember(firstPackage, context) {
+        if (firstPackage.isNotBlank()) {
+            context.packageManager.getLaunchIntentForPackage(firstPackage)
+        } else null
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 22.dp, vertical = 24.dp),
         verticalArrangement = Arrangement.spacedBy(15.dp)
     ) {
         Text("TradeLens Local", style = MaterialTheme.typography.headlineLarge)
         Text(
-            "Read-only screen analysis. Inference and history stay on this device.",
+            "Read-only screen analysis companion. Inference and history stay on this device.",
             style = MaterialTheme.typography.bodyLarge
         )
+
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier.padding(17.dp),
@@ -314,18 +332,57 @@ private fun HomeScreen(
             ) {
                 Text("Setup status", style = MaterialTheme.typography.titleLarge)
                 Text("Local model: ${modelStatus(settings, modelState)}")
-                Text("Accessibility: ${if (accessibilityEnabled) "On" else "Off"}")
+                Text("Accessibility reader: ${if (accessibilityEnabled) "Active" else "Off"}")
                 Text("Overlay permission: ${if (overlayGranted) "Allowed" else "Not allowed"}")
                 Text("Target package: ${settings.targetPackage.ifBlank { "Not set" }}")
-                Text("Analysis: ${if (settings.analysisEnabled) "Enabled" else "Disabled"}")
+                Text("Auto-analysis: ${if (settings.analysisEnabled) "Enabled" else "Disabled"}")
             }
         }
+
+        // Live Screen Reader Activity Card
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text("Screen Reader Monitor", style = MaterialTheme.typography.titleMedium)
+                if (screenSnapshot.charCount > 0) {
+                    Text(
+                        "Last observed ${screenSnapshot.charCount} chars from ${screenSnapshot.lastPackage}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        "Preview: ${screenSnapshot.lastText.take(120).replace('\n', ' ')}…",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    Text(
+                        "Waiting for target app window. Open your trading app to start screen reading.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
         if (importMessage.isNotBlank()) {
             Text(importMessage, style = MaterialTheme.typography.bodySmall)
         }
+
         Button(onClick = onStartOverlay, modifier = Modifier.fillMaxWidth()) {
             Text("Start floating overlay")
         }
+
+        if (targetLaunchIntent != null) {
+            Button(
+                onClick = { context.startActivity(targetLaunchIntent) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Open target app ($firstPackage)")
+            }
+        }
+
         if (!accessibilityEnabled) {
             OutlinedButton(
                 onClick = onOpenAccessibilitySettings,

@@ -1,6 +1,7 @@
 package com.tradelens.local.ui
 
 import android.widget.Toast
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.tradelens.local.TradeLensApp
@@ -91,14 +94,51 @@ fun SettingsScreen(
                         onValueChange = { value ->
                             onSettingsChange { it.copy(targetPackage = value.trim()) }
                         },
-                        label = { Text("Target app package") },
-                        placeholder = { Text("com.example.broker") },
+                        label = { Text("Target app package(s)") },
+                        placeholder = { Text("e.g. com.tradingview.tradingviewapp") },
                         supportingText = {
-                            Text("Only this package is observed; accessibility is read-only.")
+                            Text("Only configured packages are observed; comma-separated for multiple. Read-only.")
                         },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
+
+                    // Target app package presets
+                    Text("Popular trading apps:", style = MaterialTheme.typography.labelMedium)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf(
+                            "TradingView" to "com.tradingview.tradingviewapp",
+                            "Binance" to "com.binance.dev",
+                            "Webull" to "org.dayup.stocks",
+                            "MetaTrader 5" to "net.metaquotes.metatrader5",
+                            "Robinhood" to "com.robinhood.android",
+                            "Interactive Brokers" to "com.interactivebrokers.mobile.charlotte"
+                        ).forEach { (name, pkg) ->
+                            AssistChip(
+                                onClick = { onSettingsChange { it.copy(targetPackage = pkg) } },
+                                label = { Text(name) }
+                            )
+                        }
+                    }
+
+                    val firstPkg = remember(settings.targetPackage) {
+                        settings.targetPackage.split(',', ';', ' ', '\n').firstOrNull { it.isNotBlank() } ?: ""
+                    }
+                    val isInstalled = remember(firstPkg, context) {
+                        if (firstPkg.isBlank()) null
+                        else runCatching { context.packageManager.getPackageInfo(firstPkg, 0) }.isSuccess
+                    }
+                    if (isInstalled == true) {
+                        Text("✓ App is installed on this device", color = Color(0xFF2E7D32), style = MaterialTheme.typography.bodySmall)
+                    } else if (isInstalled == false) {
+                        Text("App not detected on device (verify package name)", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    }
+
                     SettingSwitch(
                         title = "Enable analysis",
                         summary = "Analyze changed screens locally when the service is active.",
@@ -269,7 +309,16 @@ fun ModelManagementSection(
                 modelFile.isFile -> "Model file found; validation is required"
                 else -> "Not downloaded"
             }
-            Text("Status: $status", style = MaterialTheme.typography.bodyMedium)
+            val fileSizeInfo = remember(modelFile, settings.modelReady) {
+                if (modelFile.isFile && modelFile.length() > 0L) {
+                    val mb = modelFile.length() / (1024.0 * 1024.0)
+                    if (mb >= 1000.0) " (%.2f GB)".format(mb / 1024.0) else " (%.0f MB)".format(mb)
+                } else if (partialFile.isFile && partialFile.length() > 0L) {
+                    val mb = partialFile.length() / (1024.0 * 1024.0)
+                    " (partial: %.0f MB)".format(mb)
+                } else ""
+            }
+            Text("Status: $status$fileSizeInfo", style = MaterialTheme.typography.bodyMedium)
             if (downloading) {
                 androidx.compose.material3.LinearProgressIndicator(
                     progress = { progress },
@@ -294,6 +343,21 @@ fun ModelManagementSection(
                 minLines = 2,
                 modifier = Modifier.fillMaxWidth()
             )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                AssistChip(
+                    onClick = { onSettingsChange { it.copy(modelUrl = SettingsRepository.DEFAULT_MODEL_URL) } },
+                    label = { Text("Gemma 2B GPU URL") }
+                )
+                AssistChip(
+                    onClick = { onSettingsChange { it.copy(modelUrl = SettingsRepository.CPU_MODEL_URL) } },
+                    label = { Text("Gemma 2B CPU URL") }
+                )
+            }
             Text(
                 "The default Gemma 2B int4 URL may require Hugging Face access approval. " +
                     "It is a GPU-format URL; on Mali/PowerVR use a CPU-compatible model URL or " +

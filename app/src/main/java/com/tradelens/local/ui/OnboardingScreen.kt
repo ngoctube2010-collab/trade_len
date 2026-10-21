@@ -1,5 +1,6 @@
 package com.tradelens.local.ui
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -90,14 +92,34 @@ fun OnboardingScreen(
                 onValueChange = { value ->
                     onSettingsChange { it.copy(targetPackage = value.trim()) }
                 },
-                label = { Text("Trading app package name") },
-                placeholder = { Text("For example: com.example.broker") },
+                label = { Text("Trading app package name(s)") },
+                placeholder = { Text("For example: com.tradingview.tradingviewapp") },
                 supportingText = {
-                    Text("The accessibility reader monitors only this exact package.")
+                    Text("The accessibility reader monitors only configured packages. Comma-separated for multiple.")
                 },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                listOf(
+                    "TradingView" to "com.tradingview.tradingviewapp",
+                    "Binance" to "com.binance.dev",
+                    "Webull" to "org.dayup.stocks",
+                    "MetaTrader 5" to "net.metaquotes.metatrader5",
+                    "Robinhood" to "com.robinhood.android",
+                    "Interactive Brokers" to "com.interactivebrokers.mobile.charlotte"
+                ).forEach { (name, pkg) ->
+                    AssistChip(
+                        onClick = { onSettingsChange { it.copy(targetPackage = pkg) } },
+                        label = { Text(name) }
+                    )
+                }
+            }
             ModelManagementSection(
                 settings = settings,
                 onSettingsChange = onSettingsChange,

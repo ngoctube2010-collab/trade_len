@@ -49,6 +49,7 @@ object LlmEngine {
     val gpuCapability: StateFlow<GpuCapability> = _gpuCapability.asStateFlow()
 
     private val engineMutex = Mutex()
+    private val responseBuffer = StringBuilder()
     private var inference: LlmInference? = null
     private var activeResponse: CompletableDeferred<String>? = null
     private var loadedPath: String? = null
@@ -162,6 +163,9 @@ object LlmEngine {
         ensureLoaded(context.applicationContext, modelPath, settings)
         val target = inference ?: error("The local model is not loaded.")
         val completion = CompletableDeferred<String>()
+        synchronized(responseBuffer) {
+            responseBuffer.setLength(0)
+        }
         activeResponse = completion
         try {
             withContext(Dispatchers.Default) {
@@ -211,6 +215,9 @@ object LlmEngine {
         inference?.close()
         inference = null
         activeResponse = null
+        synchronized(responseBuffer) {
+            responseBuffer.setLength(0)
+        }
         loadedPath = null
         loadedMaxTokens = null
         loadedTopK = null
@@ -229,7 +236,12 @@ object LlmEngine {
             .setTopK(settings.topK)
             .setTemperature(settings.temperature)
             .setResultListener { partialResult, done ->
-                if (done) activeResponse?.complete(partialResult)
+                synchronized(responseBuffer) {
+                    responseBuffer.append(partialResult)
+                    if (done) {
+                        activeResponse?.complete(responseBuffer.toString())
+                    }
+                }
             }
             .setErrorListener { error ->
                 activeResponse?.completeExceptionally(error)

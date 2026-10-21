@@ -22,12 +22,28 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.security.MessageDigest
 
+data class ScreenReaderSnapshot(
+    val lastText: String = "",
+    val lastPackage: String = "",
+    val charCount: Int = 0,
+    val lastTimestamp: Long = 0L
+)
+
 object ScreenReaderState {
+    private val mutableSnapshot = MutableStateFlow(ScreenReaderSnapshot())
+    val snapshot = mutableSnapshot.asStateFlow()
+
     private val mutableText = MutableStateFlow("")
     val text = mutableText.asStateFlow()
 
-    internal fun publish(value: String) {
+    internal fun publish(packageName: String, value: String) {
         mutableText.value = value
+        mutableSnapshot.value = ScreenReaderSnapshot(
+            lastText = value,
+            lastPackage = packageName,
+            charCount = value.length,
+            lastTimestamp = System.currentTimeMillis()
+        )
     }
 }
 
@@ -57,10 +73,13 @@ class ScreenReaderService : AccessibilityService() {
             )
         ) return
         val packageName = event.packageName?.toString() ?: return
-        val configuredPackage = settings.targetPackage.trim()
+        val targetPackages = settings.targetPackage
+            .split(',', ';', ' ', '\n')
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
         if (!settings.disclaimerAccepted ||
-            configuredPackage.isEmpty() ||
-            packageName != configuredPackage
+            targetPackages.isEmpty() ||
+            packageName !in targetPackages
         ) return
 
         val root = rootInActiveWindow ?: return
@@ -77,7 +96,7 @@ class ScreenReaderService : AccessibilityService() {
         if (hash == lastHash) return
         lastHash = hash
         pendingScreenText = text
-        ScreenReaderState.publish(text)
+        ScreenReaderState.publish(packageName, text)
         scheduleInference(hash, text)
     }
 
@@ -99,8 +118,12 @@ class ScreenReaderService : AccessibilityService() {
                 SystemClock.elapsedRealtime() - lastInferenceAt < MINIMUM_INFERENCE_INTERVAL_MS
             ) return@launch
             val current = settings
+            val targetPackages = current.targetPackage
+                .split(',', ';', ' ', '\n')
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
             if (!current.disclaimerAccepted || !current.analysisEnabled) return@launch
-            if (current.targetPackage.isBlank()) return@launch
+            if (targetPackages.isEmpty()) return@launch
 
             lastInferenceAt = SystemClock.elapsedRealtime()
             OverlayService.showLoading(applicationContext)

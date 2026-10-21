@@ -70,4 +70,6 @@ dependencies {
     implementation("com.google.mediapipe:tasks-genai:0.10.14")
     implementation("com.google.mlkit:text-recognition:16.0.1")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
 }
